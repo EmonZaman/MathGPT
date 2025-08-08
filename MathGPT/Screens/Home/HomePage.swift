@@ -27,6 +27,19 @@ struct HomeView: View {
         .init(sender: .assistant, text: nil, showsImageCard: true)
     ]
 
+    private let fallbackReplies: [String] = [
+        "Here’s a random response while the API is being wired up.",
+        "Working on it... Here’s a placeholder answer.",
+        "This is a simulated reply. The real API response will appear here.",
+        "Got it! Responding with a temporary message.",
+        "Thanks for your message — here’s a random placeholder.",
+        "I’m a stub right now. Real answers coming soon.",
+        "Placeholder reply: your request has been received.",
+        "Simulated: I understand. Here’s something for now.",
+        "Here’s a random message — API integration pending.",
+        "Acknowledged. Returning a mock response."
+    ]
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -94,8 +107,29 @@ struct HomeView: View {
     private func handleSendTapped() {
         let trimmed = composedMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return }
+
         messages.append(.init(sender: .user, text: trimmed, showsImageCard: false))
+        let userMessage = trimmed
         composedMessageText = ""
+
+        simulateAssistantResponse(to: userMessage)
+    }
+
+    private func simulateAssistantResponse(to userMessage: String) {
+        // API integration point:
+        // Replace the simulated delay and random reply below with your real API call.
+        // Example:
+        // callYourAPI(with: userMessage) { resultText in
+        //     DispatchQueue.main.async {
+        //         self.messages.append(.init(sender: .assistant, text: resultText, showsImageCard: false))
+        //     }
+        // }
+
+        let randomDelay = Double.random(in: 0.6...1.4)
+        let replyText = fallbackReplies.randomElement() ?? "Okay."
+        DispatchQueue.main.asyncAfter(deadline: .now() + randomDelay) {
+            self.messages.append(.init(sender: .assistant, text: replyText, showsImageCard: false))
+        }
     }
 }
 
