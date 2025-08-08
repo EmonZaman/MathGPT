@@ -29,12 +29,7 @@ struct HomeView: View {
     }
 
     @State private var composedMessageText: String = ""
-    @State private var messages: [ChatMessage] = [
-        .init(sender: .user, text: "Hello ! there", showsImageCard: false),
-        .init(sender: .assistant, text: "Hello there! How may I assist you today?", showsImageCard: false),
-        .init(sender: .user, text: "I want to learn how to solve a cubic equation? 1. Linear Equations:\n\n• Solve for x: 3x + 5 = 14\n  • Solution: x = 3\n• Solve for y: 2(y + 3) = 20\n  • Solution: y = 7\n• Solve for x: 4x + 7 = 2x + 12\n  • Solution: x = 2.5", showsImageCard: false),
-        .init(sender: .assistant, text: nil, showsImageCard: true)
-    ]
+    @State private var messages: [ChatMessage] = []
 
     private let fallbackReplies: [String] = [
         "Here’s a random response while the API is being wired up.",
@@ -314,9 +309,9 @@ struct InputBar: View {
         HStack(spacing: 8) {
             Button(action: onAttach) {
                 Image(systemName: "plus.circle")
-                    .padding(8)
+                    .font(.system(size: 18))
+                    .padding(4)
             }
-            .buttonStyle(.borderedProminent)
 
             TextField("How can I help?", text: $text, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
