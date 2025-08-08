@@ -79,7 +79,6 @@ struct HomeView: View {
                                                 text: message.text ?? (message.isVoice ? "Voice message" : ""),
                                                 isFromUser: message.sender == .user,
                                                 isVoice: message.isVoice,
-                                                transcript: message.transcript,
                                                 showsActions: message.sender == .assistant,
                                                 onCopy: { handleToolbarCopy(for: message) },
                                                 onLike: { handleToolbarLike(for: message) },
@@ -235,30 +234,39 @@ struct HomeView: View {
             messages.append(.init(sender: .user, text: nil, showsImageCard: false, isVoice: true, audioURL: url))
         }
 
-        // Try to transcribe; update the message when available
+        // Transcribe and show the recognized text as the assistant reply (placeholder for API)
         transcribeAudio(at: url)
-
-        // Simulate assistant response to voice
-        simulateAssistantResponse(to: "[voice]")
     }
 
     private func transcribeAudio(at url: URL) {
         let recognizer = SFSpeechRecognizer()
-        guard recognizer?.isAvailable == true else { return }
+        guard recognizer?.isAvailable == true else {
+            // If transcription not available, show a placeholder assistant reply
+            messages.append(.init(sender: .assistant, text: "(Voice received)", showsImageCard: false))
+            return
+        }
         let request = SFSpeechURLRecognitionRequest(url: url)
         recognizer?.recognitionTask(with: request) { result, error in
             if let transcript = result?.bestTranscription.formattedString, result?.isFinal == true {
-                if let index = messages.lastIndex(where: { $0.isVoice && $0.audioURL == url && $0.sender == .user }) {
-                    let old = messages[index]
-                    messages[index] = ChatMessage(sender: old.sender, text: transcript, showsImageCard: old.showsImageCard, isVoice: true, audioURL: old.audioURL, transcript: transcript)
+                // API integration point for voice: send 'transcript' to your API instead of appending directly
+                DispatchQueue.main.async {
+                    self.messages.append(.init(sender: .assistant, text: transcript, showsImageCard: false))
                 }
             } else if let error = error {
                 print("Transcription error: \(error)")
+                DispatchQueue.main.async {
+                    self.messages.append(.init(sender: .assistant, text: "(Could not transcribe voice)", showsImageCard: false))
+                }
             }
         }
     }
 
     private func handleSendTapped() {
+        // If currently recording, stop recording instead of sending text
+        if isRecording {
+            stopRecording()
+            return
+        }
         let trimmed = composedMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.isEmpty == false else { return }
 
@@ -323,7 +331,6 @@ struct ChatBubble: View {
     let text: String
     let isFromUser: Bool
     let isVoice: Bool
-    let transcript: String?
     var showsActions: Bool = false
     var onCopy: (() -> Void)? = nil
     var onLike: (() -> Void)? = nil
@@ -342,21 +349,14 @@ struct ChatBubble: View {
                 }
 
                 if isVoice {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 10) {
-                            Button(action: { onPlay?() }) {
-                                Image(systemName: "play.fill")
-                                    .foregroundStyle(isFromUser ? .white : .accentColor)
-                            }
-                            Text("Voice message")
-                                .font(.body)
-                                .foregroundColor(isFromUser ? .white : .primary)
+                    HStack(spacing: 10) {
+                        Button(action: { onPlay?() }) {
+                            Image(systemName: "play.fill")
+                                .foregroundStyle(isFromUser ? .white : .accentColor)
                         }
-                        if let transcript, transcript.isEmpty == false {
-                            Text(transcript)
-                                .font(.caption)
-                                .foregroundColor(isFromUser ? .white.opacity(0.9) : .secondary)
-                        }
+                        Text("Voice message")
+                            .font(.body)
+                            .foregroundColor(isFromUser ? .white : .primary)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -466,12 +466,13 @@ struct InputBar: View {
             Button(action: onMic) {
                 Image(systemName: micIsRecording ? "stop.circle.fill" : "mic.fill")
                     .foregroundColor(micIsRecording ? .red : .accentColor)
-                    .padding(8)
+                    .padding(6)
             }
 
             Button(action: onSend) {
                 Image(systemName: "paperplane.fill")
-                    .padding(8)
+                    .font(.system(size: 16))
+                    .padding(6)
             }
             .buttonStyle(.borderedProminent)
         }
