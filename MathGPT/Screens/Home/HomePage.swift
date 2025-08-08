@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct HomeView: View {
     struct ChatMessage: Identifiable, Hashable {
@@ -17,6 +18,7 @@ struct HomeView: View {
         let sender: Sender
         let text: String?
         let showsImageCard: Bool
+        let isVoice: Bool = false
     }
 
     @State private var composedMessageText: String = ""
@@ -40,6 +42,8 @@ struct HomeView: View {
         "Acknowledged. Returning a mock response."
     ]
 
+    @State private var isShowingFileImporter: Bool = false
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -53,8 +57,19 @@ struct HomeView: View {
                                         ImageCard()
                                             .padding(.horizontal)
                                     } else {
-                                        ChatBubble(text: message.text ?? "", isFromUser: message.sender == .user)
-                                            .padding(.horizontal)
+                                        ChatBubble(
+                                            text: message.text ?? (message.isVoice ? "Voice message" : ""),
+                                            isFromUser: message.sender == .user,
+                                            isVoice: message.isVoice,
+                                            showsActions: message.sender == .assistant,
+                                            onCopy: { handleToolbarCopy(for: message) },
+                                            onLike: { handleToolbarLike(for: message) },
+                                            onDislike: { handleToolbarDislike(for: message) },
+                                            onReload: { handleToolbarReload(for: message) },
+                                            onShare: { handleToolbarShare(for: message) },
+                                            onPlay: { handlePlay(for: message) }
+                                        )
+                                        .padding(.horizontal)
                                     }
                                 }
                                 Spacer(minLength: 8)
@@ -77,7 +92,7 @@ struct HomeView: View {
 
                     Divider()
 
-                    InputBar(text: $composedMessageText, onSend: handleSendTapped, onMic: handleMicTapped)
+                    InputBar(text: $composedMessageText, onSend: handleSendTapped, onMic: handleMicTapped, onAttach: handleAttachTapped)
                         .padding(.horizontal)
                         .padding(.vertical, 8)
                         .background(.ultraThinMaterial)
@@ -98,11 +113,36 @@ struct HomeView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .fileImporter(isPresented: $isShowingFileImporter, allowedContentTypes: [UTType.item], allowsMultipleSelection: false) { result in
+            switch result {
+            case .success(let url):
+                handleFilePicked(url)
+            case .failure:
+                messages.append(.init(sender: .assistant, text: "File import canceled or failed.", showsImageCard: false))
+            }
+        }
     }
 
     private func handleBackTapped() {}
     private func handleShareTapped() {}
-    private func handleMicTapped() {}
+
+    private func handleAttachTapped() {
+        isShowingFileImporter = true
+    }
+
+    private func handleFilePicked(_ url: URL) {
+        let filename = url.lastPathComponent
+        messages.append(.init(sender: .user, text: "Uploaded file: \(filename)", showsImageCard: false))
+        simulateAssistantResponse(to: "[file] \(filename)")
+    }
+
+    private func handleMicTapped() {
+        messages.append(.init(sender: .assistant, text: "Listening...", showsImageCard: false))
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            messages.append(.init(sender: .user, text: "Voice message", showsImageCard: false, isVoice: true))
+            simulateAssistantResponse(to: "[voice]")
+        }
+    }
 
     private func handleSendTapped() {
         let trimmed = composedMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -131,6 +171,26 @@ struct HomeView: View {
             self.messages.append(.init(sender: .assistant, text: replyText, showsImageCard: false))
         }
     }
+
+    private func handleToolbarCopy(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Copy button is pressed", showsImageCard: false))
+    }
+    private func handleToolbarLike(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Like button is pressed", showsImageCard: false))
+    }
+    private func handleToolbarDislike(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Dislike button is pressed", showsImageCard: false))
+    }
+    private func handleToolbarReload(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Reload button is pressed", showsImageCard: false))
+    }
+    private func handleToolbarShare(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Share button is pressed", showsImageCard: false))
+    }
+
+    private func handlePlay(for message: ChatMessage) {
+        messages.append(.init(sender: .assistant, text: "Playing voice...", showsImageCard: false))
+    }
 }
 
 // MARK: - Subviews
@@ -138,30 +198,70 @@ struct HomeView: View {
 struct ChatBubble: View {
     let text: String
     let isFromUser: Bool
+    let isVoice: Bool
+    var showsActions: Bool = false
+    var onCopy: (() -> Void)? = nil
+    var onLike: (() -> Void)? = nil
+    var onDislike: (() -> Void)? = nil
+    var onReload: (() -> Void)? = nil
+    var onShare: (() -> Void)? = nil
+    var onPlay: (() -> Void)? = nil
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            if isFromUser == false {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(.accentColor)
+        VStack(alignment: isFromUser ? .trailing : .leading, spacing: 8) {
+            HStack(alignment: .bottom, spacing: 8) {
+                if isFromUser == false {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.accentColor)
+                }
+
+                if isVoice {
+                    HStack(spacing: 10) {
+                        Button(action: { onPlay?() }) {
+                            Image(systemName: "play.fill")
+                                .foregroundStyle(isFromUser ? .white : .accentColor)
+                        }
+                        Text("Voice message")
+                            .font(.body)
+                            .foregroundColor(isFromUser ? .white : .primary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(isFromUser ? Color.accentColor : Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
+                } else {
+                    Text(text)
+                        .font(.body)
+                        .foregroundColor(isFromUser ? .white : .primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(isFromUser ? Color.accentColor : Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
+                }
+
+                if isFromUser {
+                    Spacer(minLength: 0)
+                        .frame(width: 28)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
 
-            Text(text)
-                .font(.body)
-                .foregroundColor(isFromUser ? .white : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(isFromUser ? Color.accentColor : Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
-
-            if isFromUser {
-                Spacer(minLength: 0)
-                    .frame(width: 28)
+            if showsActions {
+                HStack(spacing: 16) {
+                    Button(action: { onCopy?() }) { Image(systemName: "doc.on.doc") }
+                    Button(action: { onLike?() }) { Image(systemName: "hand.thumbsup") }
+                    Button(action: { onDislike?() }) { Image(systemName: "hand.thumbsdown") }
+                    Button(action: { onReload?() }) { Image(systemName: "arrow.clockwise") }
+                    Button(action: { onShare?() }) { Image(systemName: "square.and.arrow.up") }
+                }
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+                .padding(.horizontal, isFromUser ? 0 : 36)
             }
         }
-        .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
     }
 }
 
@@ -199,6 +299,7 @@ struct InputBar: View {
     @Binding var text: String
     var onSend: () -> Void
     var onMic: () -> Void
+    var onAttach: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -211,6 +312,12 @@ struct InputBar: View {
                     .padding(8)
             }
 
+                        Button(action: onAttach) {
+                Image(systemName: "plus.circle")
+                    .padding(8)
+            }
+            .buttonStyle(.borderedProminent)
+ 
             Button(action: onSend) {
                 Image(systemName: "paperplane.fill")
                     .padding(8)
