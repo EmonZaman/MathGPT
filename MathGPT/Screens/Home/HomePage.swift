@@ -18,7 +18,14 @@ struct HomeView: View {
         let sender: Sender
         let text: String?
         let showsImageCard: Bool
-        let isVoice: Bool = false
+        let isVoice: Bool
+
+        init(sender: Sender, text: String?, showsImageCard: Bool, isVoice: Bool = false) {
+            self.sender = sender
+            self.text = text
+            self.showsImageCard = showsImageCard
+            self.isVoice = isVoice
+        }
     }
 
     @State private var composedMessageText: String = ""
@@ -115,8 +122,10 @@ struct HomeView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .fileImporter(isPresented: $isShowingFileImporter, allowedContentTypes: [UTType.item], allowsMultipleSelection: false) { result in
             switch result {
-            case .success(let url):
-                handleFilePicked(url)
+            case .success(let urls):
+                if let url = urls.first {
+                    handleFilePicked(url)
+                }
             case .failure:
                 messages.append(.init(sender: .assistant, text: "File import canceled or failed.", showsImageCard: false))
             }
