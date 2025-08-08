@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Y6W-OH-hqX">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--HomePage-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="HomePage" title="HomePage" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Y6W-OH-hqX" customClass="HomePage" customModule="MathGPT" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="MathGPT" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qgg-Up-kDg">
+                                <rect key="frame" x="130.66666666666669" y="218" width="131.66666666666669" height="38.333333333333314"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="S2L-s1-cfw">
+                                <rect key="frame" x="76.666666666666686" y="318" width="240" height="50"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xUx-Ud-ih7">
+                                        <rect key="frame" x="148" y="3" width="44" height="44"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="44" id="qIU-cq-hQ1"/>
+                                            <constraint firstAttribute="width" constant="44" id="tRW-F1-6M1"/>
+                                        </constraints>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain">
+                                            <backgroundConfiguration key="background" image="addImage"/>
+                                        </buttonConfiguration>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="y0G-gg-MVK">
+                                        <rect key="frame" x="48" y="3" width="44" height="44"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="44" id="9BQ-OA-ohn"/>
+                                            <constraint firstAttribute="width" constant="44" id="RwM-nR-ob2"/>
+                                        </constraints>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain">
+                                            <backgroundConfiguration key="background" image="scanImage"/>
+                                        </buttonConfiguration>
+                                    </button>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstItem="y0G-gg-MVK" firstAttribute="centerY" secondItem="S2L-s1-cfw" secondAttribute="centerY" id="IBw-bO-Nh0"/>
+                                    <constraint firstAttribute="height" constant="50" id="MU0-PI-1AP"/>
+                                    <constraint firstItem="xUx-Ud-ih7" firstAttribute="centerY" secondItem="S2L-s1-cfw" secondAttribute="centerY" id="NJQ-Ft-E8j"/>
+                                    <constraint firstItem="xUx-Ud-ih7" firstAttribute="centerX" secondItem="S2L-s1-cfw" secondAttribute="centerX" constant="50" id="Pl5-xa-dsl"/>
+                                    <constraint firstAttribute="width" constant="240" id="VQC-ay-IAY"/>
+                                    <constraint firstItem="y0G-gg-MVK" firstAttribute="centerX" secondItem="S2L-s1-cfw" secondAttribute="centerX" constant="-50" id="sT2-Su-Fgu"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="qgg-Up-kDg" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" constant="100" id="Z7k-FM-cit"/>
+                            <constraint firstItem="S2L-s1-cfw" firstAttribute="centerX" secondItem="5EZ-qb-Rvc" secondAttribute="centerX" id="nge-7f-dbT"/>
+                            <constraint firstItem="qgg-Up-kDg" firstAttribute="centerX" secondItem="5EZ-qb-Rvc" secondAttribute="centerX" id="uRC-N4-8e4"/>
+                            <constraint firstItem="S2L-s1-cfw" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" constant="200" id="zHx-ad-gPm"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="btnAddImage" destination="y0G-gg-MVK" id="lvg-qH-0xE"/>
+                        <outlet property="btnScan" destination="xUx-Ud-ih7" id="Vki-zu-EFt"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-132" y="-28"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="addImage" width="57.333332061767578" height="65"/>
+        <image name="scanImage" width="57.333332061767578" height="65"/>
+    </resources>
+</document>
