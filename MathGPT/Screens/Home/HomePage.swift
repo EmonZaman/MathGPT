@@ -32,20 +32,34 @@ struct HomeView: View {
             ZStack {
                 Color(.systemBackground).ignoresSafeArea()
                 VStack(spacing: 0) {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 16) {
-                            ForEach(messages) { message in
-                                if message.showsImageCard {
-                                    ImageCard()
-                                        .padding(.horizontal)
-                                } else {
-                                    ChatBubble(text: message.text ?? "", isFromUser: message.sender == .user)
-                                        .padding(.horizontal)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 16) {
+                                ForEach(messages) { message in
+                                    if message.showsImageCard {
+                                        ImageCard()
+                                            .padding(.horizontal)
+                                    } else {
+                                        ChatBubble(text: message.text ?? "", isFromUser: message.sender == .user)
+                                            .padding(.horizontal)
+                                    }
+                                }
+                                Spacer(minLength: 8)
+                            }
+                            .padding(.top, 8)
+                        }
+                        .onAppear {
+                            if let lastId = messages.last?.id {
+                                proxy.scrollTo(lastId, anchor: .bottom)
+                            }
+                        }
+                        .onChange(of: messages.count) { _ in
+                            if let lastId = messages.last?.id {
+                                withAnimation(.easeOut(duration: 0.25)) {
+                                    proxy.scrollTo(lastId, anchor: .bottom)
                                 }
                             }
-                            Spacer(minLength: 8)
                         }
-                        .padding(.top, 8)
                     }
 
                     Divider()
