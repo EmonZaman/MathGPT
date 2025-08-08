@@ -10,6 +10,13 @@ import UniformTypeIdentifiers
 import AVFoundation
 import Speech
 
+final class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
+    var onFinish: (() -> Void)?
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        onFinish?()
+    }
+}
+
 struct HomeView: View {
     struct ChatMessage: Identifiable, Hashable {
         enum Sender {
@@ -57,6 +64,9 @@ struct HomeView: View {
     @State private var audioRecorder: AVAudioRecorder?
     @State private var audioPlayer: AVAudioPlayer?
     @State private var recordingMessageId: UUID?
+    @State private var currentlyPlayingMessageId: UUID?
+    @State private var isAudioPlaying: Bool = false
+    private let audioDelegate = AudioPlayerDelegateProxy()
 
     var body: some View {
         NavigationView {
@@ -79,13 +89,14 @@ struct HomeView: View {
                                                 text: message.text ?? (message.isVoice ? "Voice message" : ""),
                                                 isFromUser: message.sender == .user,
                                                 isVoice: message.isVoice,
+                                                isPlaying: (message.id == currentlyPlayingMessageId && isAudioPlaying),
                                                 showsActions: message.sender == .assistant,
                                                 onCopy: { handleToolbarCopy(for: message) },
                                                 onLike: { handleToolbarLike(for: message) },
                                                 onDislike: { handleToolbarDislike(for: message) },
                                                 onReload: { handleToolbarReload(for: message) },
                                                 onShare: { handleToolbarShare(for: message) },
-                                                onPlay: { handlePlay(for: message) }
+                                                onPlay: { handlePlayToggle(for: message) }
                                             )
                                             .padding(.horizontal)
                                         }
@@ -310,17 +321,45 @@ struct HomeView: View {
         print("Share button pressed for message id: \(message.id)")
     }
 
-    private func handlePlay(for message: ChatMessage) {
+    private func handlePlayToggle(for message: ChatMessage) {
         guard let url = message.audioURL else {
             print("No audio URL to play")
             return
         }
+        // If tapping the same message that's currently loaded
+        if currentlyPlayingMessageId == message.id, let player = audioPlayer {
+            if player.isPlaying {
+                player.pause()
+                isAudioPlaying = false
+            } else {
+                player.play()
+                isAudioPlaying = true
+            }
+            return
+        }
+
+        // Different message: stop current and start new
+        audioPlayer?.stop()
         do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.delegate = audioDelegate
+            audioDelegate.onFinish = { [weak player] in
+                DispatchQueue.main.async {
+                    if self.audioPlayer === player {
+                        self.isAudioPlaying = false
+                        self.currentlyPlayingMessageId = nil
+                    }
+                }
+            }
+            player.prepareToPlay()
+            player.play()
+            audioPlayer = player
+            currentlyPlayingMessageId = message.id
+            isAudioPlaying = true
         } catch {
             print("Audio play failed: \(error)")
+            isAudioPlaying = false
+            currentlyPlayingMessageId = nil
         }
     }
 }
@@ -331,6 +370,7 @@ struct ChatBubble: View {
     let text: String
     let isFromUser: Bool
     let isVoice: Bool
+    let isPlaying: Bool
     var showsActions: Bool = false
     var onCopy: (() -> Void)? = nil
     var onLike: (() -> Void)? = nil
@@ -350,10 +390,8 @@ struct ChatBubble: View {
 
                 if isVoice {
                     HStack(spacing: 10) {
-                        Button(action: { onPlay?() }) {
-                            Image(systemName: "play.fill")
-                                .foregroundStyle(isFromUser ? .white : .accentColor)
-                        }
+                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                            .foregroundStyle(isFromUser ? .white : .accentColor)
                         Text("Voice message")
                             .font(.body)
                             .foregroundColor(isFromUser ? .white : .primary)
@@ -363,6 +401,8 @@ struct ChatBubble: View {
                     .background(isFromUser ? Color.accentColor : Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture { onPlay?() }
                 } else {
                     Text(text)
                         .font(.body)
