@@ -182,23 +182,23 @@ struct HomeView: View {
     }
 
     private func handleToolbarCopy(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Copy button is pressed", showsImageCard: false))
+        print("Copy button pressed for message id: \(message.id)")
     }
     private func handleToolbarLike(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Like button is pressed", showsImageCard: false))
+        print("Like button pressed for message id: \(message.id)")
     }
     private func handleToolbarDislike(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Dislike button is pressed", showsImageCard: false))
+        print("Dislike button pressed for message id: \(message.id)")
     }
     private func handleToolbarReload(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Reload button is pressed", showsImageCard: false))
+        print("Reload button pressed for message id: \(message.id)")
     }
     private func handleToolbarShare(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Share button is pressed", showsImageCard: false))
+        print("Share button pressed for message id: \(message.id)")
     }
 
     private func handlePlay(for message: ChatMessage) {
-        messages.append(.init(sender: .assistant, text: "Playing voice...", showsImageCard: false))
+        print("Play voice pressed for message id: \(message.id)")
     }
 }
 
@@ -312,6 +312,12 @@ struct InputBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            Button(action: onAttach) {
+                Image(systemName: "plus.circle")
+                    .padding(8)
+            }
+            .buttonStyle(.borderedProminent)
+
             TextField("How can I help?", text: $text, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1...4)
@@ -321,12 +327,6 @@ struct InputBar: View {
                     .padding(8)
             }
 
-                        Button(action: onAttach) {
-                Image(systemName: "plus.circle")
-                    .padding(8)
-            }
-            .buttonStyle(.borderedProminent)
- 
             Button(action: onSend) {
                 Image(systemName: "paperplane.fill")
                     .padding(8)
